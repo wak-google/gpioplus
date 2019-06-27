@@ -38,7 +38,7 @@ static int build(const Chip& chip, uint32_t line_offset,
     }
     memcpy(req.consumer_label, consumer_label.data(), consumer_label.size());
 
-    int r = chip.getFd().getSys()->gpio_get_lineevent(*chip.getFd(), &req);
+    int r = chip.getSys()->gpio_get_lineevent(chip.getFd().getValue(), &req);
     if (r < 0)
     {
         throw std::system_error(-r, std::generic_category(),
@@ -51,19 +51,15 @@ static int build(const Chip& chip, uint32_t line_offset,
 Event::Event(const Chip& chip, uint32_t line_offset, HandleFlags handle_flags,
              EventFlags event_flags, std::string_view consumer_label) :
     fd(build(chip, line_offset, handle_flags, event_flags, consumer_label),
-       std::false_type(), chip.getFd().getSys())
+       chip.getSys()),
+    sys(chip.getSys())
 {
-}
-
-const internal::Fd& Event::getFd() const
-{
-    return fd;
 }
 
 std::optional<Event::Data> Event::read() const
 {
     struct gpioevent_data data;
-    ssize_t read = fd.getSys()->read(*fd, &data, sizeof(data));
+    ssize_t read = sys->read(fd.getValue(), &data, sizeof(data));
     if (read == -1)
     {
         if (errno == EAGAIN)
@@ -84,7 +80,7 @@ uint8_t Event::getValue() const
 {
     struct gpiohandle_data data;
     memset(&data, 0, sizeof(data));
-    int r = fd.getSys()->gpiohandle_get_line_values(*fd, &data);
+    int r = sys->gpiohandle_get_line_values(fd.getValue(), &data);
     if (r < 0)
     {
         throw std::system_error(-r, std::generic_category(),

@@ -2,6 +2,7 @@
 #include <fcntl.h>
 #include <gpioplus/chip.hpp>
 #include <linux/gpio.h>
+#include <stdplus/fd/ops/create.hpp>
 #include <stdplus/util/string.hpp>
 #include <string>
 #include <system_error>
@@ -20,8 +21,9 @@ LineFlags::LineFlags(uint32_t flags) :
 }
 
 Chip::Chip(unsigned id, const internal::Sys* sys) :
-    fd(strCat("/dev/gpiochip", std::to_string(id)).c_str(),
-       O_RDONLY | O_CLOEXEC, sys)
+    fd(stdplus::fd::ops::open(strCat("/dev/gpiochip", std::to_string(id)),
+                              O_RDONLY, sys)),
+    sys(sys)
 {
 }
 
@@ -30,7 +32,7 @@ ChipInfo Chip::getChipInfo() const
     struct gpiochip_info info;
     memset(&info, 0, sizeof(info));
 
-    int r = fd.getSys()->gpio_get_chipinfo(*fd, &info);
+    int r = sys->gpio_get_chipinfo(fd.getValue(), &info);
     if (r < 0)
     {
         throw std::system_error(-r, std::generic_category(),
@@ -46,7 +48,7 @@ LineInfo Chip::getLineInfo(uint32_t offset) const
     memset(&info, 0, sizeof(info));
     info.line_offset = offset;
 
-    int r = fd.getSys()->gpio_get_lineinfo(*fd, &info);
+    int r = sys->gpio_get_lineinfo(fd.getValue(), &info);
     if (r < 0)
     {
         throw std::system_error(-r, std::generic_category(),
@@ -54,11 +56,6 @@ LineInfo Chip::getLineInfo(uint32_t offset) const
     }
 
     return LineInfo{info.flags, info.name, info.consumer};
-}
-
-const internal::Fd& Chip::getFd() const
-{
-    return fd;
 }
 
 } // namespace gpioplus

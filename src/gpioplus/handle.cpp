@@ -63,7 +63,7 @@ static int build(const Chip& chip, const std::vector<Handle::Line>& lines,
     memcpy(req.consumer_label, consumer_label.data(), consumer_label.size());
     req.lines = lines.size();
 
-    int r = chip.getFd().getSys()->gpio_get_linehandle(*chip.getFd(), &req);
+    int r = chip.getSys()->gpio_get_linehandle(chip.getFd().getValue(), &req);
     if (r < 0)
     {
         throw std::system_error(-r, std::generic_category(),
@@ -75,15 +75,9 @@ static int build(const Chip& chip, const std::vector<Handle::Line>& lines,
 
 Handle::Handle(const Chip& chip, const std::vector<Line>& lines,
                HandleFlags flags, std::string_view consumer_label) :
-    fd(build(chip, lines, flags, consumer_label), std::false_type(),
-       chip.getFd().getSys()),
-    nlines(lines.size())
+    fd(build(chip, lines, flags, consumer_label), chip.getSys()),
+    sys(chip.getSys()), nlines(lines.size())
 {
-}
-
-const internal::Fd& Handle::getFd() const
-{
-    return fd;
 }
 
 std::vector<uint8_t> Handle::getValues() const
@@ -97,7 +91,7 @@ void Handle::getValues(std::vector<uint8_t>& values) const
 {
     struct gpiohandle_data data;
     memset(&data, 0, sizeof(data));
-    int r = fd.getSys()->gpiohandle_get_line_values(*fd, &data);
+    int r = sys->gpiohandle_get_line_values(fd.getValue(), &data);
     if (r < 0)
     {
         throw std::system_error(-r, std::generic_category(),
@@ -124,7 +118,7 @@ void Handle::setValues(const std::vector<uint8_t>& values) const
     {
         data.values[i] = values[i];
     }
-    int r = fd.getSys()->gpiohandle_set_line_values(*fd, &data);
+    int r = sys->gpiohandle_set_line_values(fd.getValue(), &data);
     if (r < 0)
     {
         throw std::system_error(-r, std::generic_category(),

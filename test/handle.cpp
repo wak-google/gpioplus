@@ -1,5 +1,6 @@
 #include <cerrno>
 #include <cstdint>
+#include <fcntl.h>
 #include <gmock/gmock.h>
 #include <gpioplus/handle.hpp>
 #include <gpioplus/test/sys.hpp>
@@ -62,6 +63,7 @@ class HandleTest : public testing::Test
     {
         EXPECT_CALL(mock, open(testing::_, testing::_))
             .WillOnce(Return(chip_fd));
+        EXPECT_CALL(mock, fcntl_setfd(chip_fd, FD_CLOEXEC)).WillOnce(Return(0));
         chip = std::make_unique<Chip>(0, &mock);
     }
 
@@ -86,11 +88,12 @@ TEST_F(HandleTest, ConstructSuccess)
     EXPECT_CALL(mock, gpio_get_linehandle(chip_fd, testing::_))
         .WillOnce(
             DoAll(SaveArgPointee<1>(&req), SetArgPointee<1>(ret), Return(0)));
+    EXPECT_CALL(mock, fcntl_setfd(handle_fd, FD_CLOEXEC)).WillOnce(Return(0));
     Handle handle(*chip, lines,
                   HandleFlags(LineFlags(GPIOLINE_FLAG_ACTIVE_LOW)),
                   label.c_str());
 
-    EXPECT_EQ(handle_fd, *handle.getFd());
+    EXPECT_EQ(handle_fd, handle.getFd().getValue());
     EXPECT_EQ(GPIOHANDLE_REQUEST_INPUT | GPIOHANDLE_REQUEST_ACTIVE_LOW,
               req.flags);
     EXPECT_EQ(label, req.consumer_label);
@@ -159,6 +162,8 @@ class HandleMethodTest : public HandleTest
         ret.fd = handle_fd;
         EXPECT_CALL(mock, gpio_get_linehandle(chip_fd, testing::_))
             .WillOnce(DoAll(SetArgPointee<1>(ret), Return(0)));
+        EXPECT_CALL(mock, fcntl_setfd(handle_fd, FD_CLOEXEC))
+            .WillOnce(Return(0));
         handle = std::make_unique<Handle>(
             *chip, lines, HandleFlags(LineFlags(GPIOLINE_FLAG_IS_OUT)),
             "method");

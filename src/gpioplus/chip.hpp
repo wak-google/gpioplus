@@ -1,7 +1,8 @@
 #pragma once
 #include <cstdint>
-#include <gpioplus/internal/fd.hpp>
 #include <gpioplus/internal/sys.hpp>
+#include <stdplus/fd/base.hpp>
+#include <stdplus/fd/dupable.hpp>
 #include <string>
 
 namespace gpioplus
@@ -65,6 +66,24 @@ class Chip
      */
     Chip(unsigned id, const internal::Sys* sys = &internal::sys_impl);
 
+    /** @brief Get the file descriptor associated with the chip
+     *
+     *  @return The file descriptor
+     */
+    inline const stdplus::fd::Fd& getFd() const
+    {
+        return fd;
+    }
+
+    /** @brief Get the sys implementation associated with the chip
+     *
+     *  @return The sys impl
+     */
+    inline const internal::Sys* getSys() const
+    {
+        return sys;
+    }
+
     /** @brief Gets the information about this chip
      *
      *  @throws std::system_error for underlying syscall failures
@@ -79,14 +98,9 @@ class Chip
      */
     LineInfo getLineInfo(uint32_t offset) const;
 
-    /** @brief Get the file descriptor associated with the chip
-     *
-     *  @return The file descriptor
-     */
-    const internal::Fd& getFd() const;
-
   private:
-    internal::Fd fd;
+    stdplus::fd::DupableFd fd;
+    const internal::Sys* sys;
 };
 
 } // namespace gpioplus

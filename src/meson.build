@@ -10,7 +10,6 @@ gpioplus_lib = library(
     'gpioplus/chip.cpp',
     'gpioplus/event.cpp',
     'gpioplus/handle.cpp',
-    'gpioplus/internal/fd.cpp',
     'gpioplus/internal/sys.cpp',
   ],
   include_directories: gpioplus_headers,
@@ -38,7 +37,6 @@ install_headers(
   subdir: 'gpioplus')
 
 install_headers(
-  'gpioplus/internal/fd.hpp',
   'gpioplus/internal/sys.hpp',
   subdir: 'gpioplus/internal')
 

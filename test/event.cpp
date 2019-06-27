@@ -1,5 +1,6 @@
 #include <cerrno>
 #include <cstring>
+#include <fcntl.h>
 #include <gmock/gmock.h>
 #include <gpioplus/event.hpp>
 #include <gpioplus/test/sys.hpp>
@@ -48,6 +49,7 @@ class EventTest : public testing::Test
     {
         EXPECT_CALL(mock, open(testing::_, testing::_))
             .WillOnce(Return(chip_fd));
+        EXPECT_CALL(mock, fcntl_setfd(chip_fd, FD_CLOEXEC)).WillOnce(Return(0));
         chip = std::make_unique<Chip>(0, &mock);
     }
 
@@ -72,9 +74,10 @@ TEST_F(EventTest, ConstructSuccess)
     EXPECT_CALL(mock, gpio_get_lineevent(chip_fd, testing::_))
         .WillOnce(
             DoAll(SaveArgPointee<1>(&req), SetArgPointee<1>(ret), Return(0)));
+    EXPECT_CALL(mock, fcntl_setfd(event_fd, FD_CLOEXEC)).WillOnce(Return(0));
     Event event(*chip, line_offset, handle_flags, event_flags, label.c_str());
 
-    EXPECT_EQ(event_fd, *event.getFd());
+    EXPECT_EQ(event_fd, event.getFd().getValue());
     EXPECT_EQ(line_offset, req.lineoffset);
     EXPECT_EQ(GPIOHANDLE_REQUEST_INPUT, req.handleflags);
     EXPECT_EQ(GPIOEVENT_REQUEST_RISING_EDGE, req.eventflags);
@@ -126,6 +129,8 @@ class EventMethodTest : public EventTest
         ret.fd = event_fd;
         EXPECT_CALL(mock, gpio_get_lineevent(chip_fd, testing::_))
             .WillOnce(DoAll(SetArgPointee<1>(ret), Return(0)));
+        EXPECT_CALL(mock, fcntl_setfd(event_fd, FD_CLOEXEC))
+            .WillOnce(Return(0));
         event = std::make_unique<Event>(*chip, 0, HandleFlags(LineFlags(0)),
                                         EventFlags(), "method");
     }

@@ -5,7 +5,6 @@ tests = [
   'chip',
   'event',
   'handle',
-  'internal/fd',
   'mocks',
   'utility/aspeed',
 ]

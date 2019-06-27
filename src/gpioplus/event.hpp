@@ -3,9 +3,10 @@
 #include <cstdint>
 #include <gpioplus/chip.hpp>
 #include <gpioplus/handle.hpp>
-#include <gpioplus/internal/fd.hpp>
+#include <gpioplus/internal/sys.hpp>
 #include <optional>
 #include <ratio>
+#include <stdplus/fd/dupable.hpp>
 #include <string_view>
 
 namespace gpioplus
@@ -69,11 +70,14 @@ class Event : public EventInterface
     Event(const Chip& chip, uint32_t line_offset, HandleFlags handle_flags,
           EventFlags event_flags, std::string_view consumer_label);
 
-    /** @brief Get the file descriptor used for the handle
+    /** @brief Get the file descriptor associated with the event
      *
-     *  @return The gpio handle file descriptor
+     *  @return The file descriptor
      */
-    const internal::Fd& getFd() const;
+    inline const stdplus::fd::Fd& getFd() const
+    {
+        return fd;
+    }
 
     /** @brief Reads an event from the event file descriptor
      *         Follows the read(2) semantics of the underyling file descriptor
@@ -92,7 +96,8 @@ class Event : public EventInterface
     uint8_t getValue() const override;
 
   private:
-    internal::Fd fd;
+    stdplus::fd::DupableFd fd;
+    const internal::Sys* sys;
 };
 
 } // namespace gpioplus

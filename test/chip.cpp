@@ -51,8 +51,10 @@ class ChipMethodTest : public testing::Test
         const int chip_id = 1;
         const char* path = "/dev/gpiochip1";
 
-        EXPECT_CALL(mock, open(StrEq(path), O_RDONLY | O_CLOEXEC))
+        EXPECT_CALL(mock, open(StrEq(path), O_RDONLY))
             .WillOnce(Return(expected_fd));
+        EXPECT_CALL(mock, fcntl_setfd(expected_fd, FD_CLOEXEC))
+            .WillOnce(Return(0));
         chip = std::make_unique<Chip>(chip_id, &mock);
     }
 
@@ -65,8 +67,8 @@ class ChipMethodTest : public testing::Test
 
 TEST_F(ChipMethodTest, Basic)
 {
-    EXPECT_EQ(expected_fd, *chip->getFd());
-    EXPECT_EQ(&mock, chip->getFd().getSys());
+    EXPECT_EQ(expected_fd, chip->getFd().getValue());
+    EXPECT_EQ(&mock, chip->getSys());
 }
 
 TEST_F(ChipMethodTest, GetChipInfoSuccess)

@@ -1,7 +1,8 @@
 #pragma once
 #include <cstdint>
 #include <gpioplus/chip.hpp>
-#include <gpioplus/internal/fd.hpp>
+#include <gpioplus/internal/sys.hpp>
+#include <stdplus/fd/dupable.hpp>
 #include <string_view>
 #include <vector>
 
@@ -79,11 +80,14 @@ class Handle : public HandleInterface
     Handle(const Chip& chip, const std::vector<Line>& lines, HandleFlags flags,
            std::string_view consumer_label);
 
-    /** @brief Get the file descriptor used for the handle
+    /** @brief Get the file descriptor associated with the handle
      *
-     *  @return The gpio handle file descriptor
+     *  @return The file descriptor
      */
-    const internal::Fd& getFd() const;
+    inline const stdplus::fd::Fd& getFd() const
+    {
+        return fd;
+    }
 
     /** @brief Get the current values of all associated lines
      *
@@ -107,7 +111,8 @@ class Handle : public HandleInterface
     void setValues(const std::vector<uint8_t>& values) const override;
 
   private:
-    internal::Fd fd;
+    stdplus::fd::DupableFd fd;
+    const internal::Sys* sys;
     uint32_t nlines;
 };
 
