@@ -1,3 +1,7 @@
+gpioplus_deps = [
+  dependency('stdplus'),
+]
+
 gpioplus_headers = include_directories('.')
 
 gpioplus_lib = library(
@@ -12,9 +16,11 @@ gpioplus_lib = library(
   include_directories: gpioplus_headers,
   implicit_include_directories: false,
   version: meson.project_version(),
+  dependencies: gpioplus_deps,
   install: true)
 
 gpioplus = declare_dependency(
+  dependencies: gpioplus_deps,
   include_directories: gpioplus_headers,
   link_with: gpioplus_lib,
 )

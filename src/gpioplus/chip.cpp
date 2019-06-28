@@ -2,11 +2,14 @@
 #include <fcntl.h>
 #include <gpioplus/chip.hpp>
 #include <linux/gpio.h>
+#include <stdplus/util/string.hpp>
 #include <string>
 #include <system_error>
 
 namespace gpioplus
 {
+
+using stdplus::util::strCat;
 
 LineFlags::LineFlags(uint32_t flags) :
     kernel(flags & GPIOLINE_FLAG_KERNEL), output(flags & GPIOLINE_FLAG_IS_OUT),
@@ -17,7 +20,7 @@ LineFlags::LineFlags(uint32_t flags) :
 }
 
 Chip::Chip(unsigned id, const internal::Sys* sys) :
-    fd(std::string{"/dev/gpiochip"}.append(std::to_string(id)).c_str(),
+    fd(strCat("/dev/gpiochip", std::to_string(id)).c_str(),
        O_RDONLY | O_CLOEXEC, sys)
 {
 }
