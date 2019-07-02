@@ -44,7 +44,20 @@ class EventInterface
         uint32_t id;
     };
 
+    /** @brief Reads an event from the event file descriptor
+     *         Follows the read(2) semantics of the underyling file descriptor
+     *
+     *  @throws std::system_error for underlying syscall failures
+     *  @return The value of the event or std::nullopt if the file descriptor
+     *          is non-blocking and no event has occurred
+     */
     virtual std::optional<Data> read() const = 0;
+
+    /** @brief Get the current value of the associated line
+     *
+     *  @throws std::system_error for underlying syscall failures
+     *  @return The value of the gpio line
+     */
     virtual uint8_t getValue() const = 0;
 };
 
@@ -79,20 +92,7 @@ class Event : public EventInterface
         return fd;
     }
 
-    /** @brief Reads an event from the event file descriptor
-     *         Follows the read(2) semantics of the underyling file descriptor
-     *
-     *  @throws std::system_error for underlying syscall failures
-     *  @return The value of the event or std::nullopt if the file descriptor
-     *          is non-blocking and no event has occurred
-     */
     std::optional<Data> read() const override;
-
-    /** @brief Get the current value of the associated line
-     *
-     *  @throws std::system_error for underlying syscall failures
-     *  @return The value of the gpio line
-     */
     uint8_t getValue() const override;
 
   private:

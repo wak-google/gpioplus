@@ -45,8 +45,25 @@ class HandleInterface
   public:
     virtual ~HandleInterface() = default;
 
+    /** @brief Sets the current values of all associated lines
+     *
+     *  @param[in] values - The new values of the gpio lines
+     *  @throws std::system_error for underlying syscall failures
+     */
     virtual std::vector<uint8_t> getValues() const = 0;
+
+    /** @brief Gets the current values of all associated lines
+     *
+     *  @param[out] values - The values of the gpio lines
+     *  @throws std::system_error for underlying syscall failures
+     */
     virtual void getValues(std::vector<uint8_t>& values) const = 0;
+
+    /** @brief Get the current values of all associated lines
+     *
+     *  @throws std::system_error for underlying syscall failures
+     *  @return The values of the gpio lines
+     */
     virtual void setValues(const std::vector<uint8_t>& values) const = 0;
 };
 
@@ -89,25 +106,8 @@ class Handle : public HandleInterface
         return fd;
     }
 
-    /** @brief Get the current values of all associated lines
-     *
-     *  @throws std::system_error for underlying syscall failures
-     *  @return The values of the gpio lines
-     */
     std::vector<uint8_t> getValues() const override;
-
-    /** @brief Gets the current values of all associated lines
-     *
-     *  @param[out] values - The values of the gpio lines
-     *  @throws std::system_error for underlying syscall failures
-     */
     void getValues(std::vector<uint8_t>& values) const override;
-
-    /** @brief Sets the current values of all associated lines
-     *
-     *  @param[in] values - The new values of the gpio lines
-     *  @throws std::system_error for underlying syscall failures
-     */
     void setValues(const std::vector<uint8_t>& values) const override;
 
   private:
